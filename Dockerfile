@@ -26,6 +26,7 @@ FROM postgres:${PG_VERSION}
 ARG VERSION 
 ARG POSTGIS_MAJOR=3
 ARG WALG_VERSION=2.0.0
+ARG PGVECTOR_VERSION=0.4.4
 
 LABEL fly.app_role=postgres_cluster
 LABEL fly.version=${VERSION}
@@ -33,7 +34,14 @@ LABEL fly.pg-version=${PG_VERSION}
 
 RUN apt-get update && apt-get install --no-install-recommends -y \
     ca-certificates curl bash dnsutils vim-tiny procps jq haproxy \
+    build-essential postgresql-server-dev-all \
     && apt autoremove -y
+
+RUN curl -L -o pgvector.tar.gz "https://github.com/ankane/pgvector/archive/refs/tags/v${PGVECTOR_VERSION}.tar.gz" && \
+    tar -xzf pgvector.tar.gz && \
+    cd "pgvector-${PGVECTOR_VERSION}" && \
+    make && \
+    make install
 
 RUN echo "deb https://packagecloud.io/timescale/timescaledb/debian/ $(cat /etc/os-release | grep VERSION_CODENAME | cut -d'=' -f2) main" > /etc/apt/sources.list.d/timescaledb.list \
     && curl -L https://packagecloud.io/timescale/timescaledb/gpgkey | apt-key add -
